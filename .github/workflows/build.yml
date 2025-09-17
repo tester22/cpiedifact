@@ -33,10 +33,8 @@ jobs:
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
         restore-keys: ${{ runner.os }}-m2
         
-    - name: Build libs/edifactconverter module first
-      run: |
-        cd libs/edifactconverter
-        mvn clean install -DskipTests
+    - name: Build project
+      run: mvn clean package -DskipTests
         
     - name: Copy XSD files to resources
       run: |
@@ -51,21 +49,17 @@ jobs:
           if [[ -f "$file" ]]; then
             # Extract version and prefix from filename
             # Supports both EDIFACTINTERCHANGE_APERAK_11A.xsd and ORDRSP_INVOIC_96A.xsd patterns
-            if [[ $file =~ ^(EDIFACTINTERCHANGE|ORDRSP)_.*_([0-9][0-9][A-Z])\.xsd$ ]]; then
-              prefix="${BASH_REMATCH[1]}"
-              version="${BASH_REMATCH[2]}"
+            if [[ $file =~ ^.*_([0-9][0-9][A-Z])\.xsd$ ]]; then
+              version="${BASH_REMATCH[1]}"
               
               # Create directory for this version if it doesn't exist
-              mkdir -p "${prefix}_${version}"
+              mkdir -p "EDIFACTINTERCHANGE_${version}"
               # Copy file to appropriate version folder
-              cp "$file" "${prefix}_${version}/"
-              echo "Organized $file -> ${prefix}_${version}/"
+              cp "$file" "EDIFACTINTERCHANGE_${version}/"
+              echo "Organized $file -> EDIFACTINTERCHANGE_${version}/"
             fi
           fi
         done
-        
-    - name: Build project
-      run: mvn clean package -DskipTests
       
     - name: Upload test results
       uses: actions/upload-artifact@v4
