@@ -42,6 +42,28 @@ jobs:
       run: |
         find libs/edifactconverter -name "*.xsd" -type f -exec cp {} cpitoedifact-converter-core/src/main/resources/ \;
         
+    - name: Organize XSD files into version folders
+      run: |
+        cd cpitoedifact-converter-core/src/main/resources
+        
+        # Dynamically create directories and organize XSD files by version
+        for file in *.xsd; do
+          if [[ -f "$file" ]]; then
+            # Extract version and prefix from filename
+            # Supports both EDIFACTINTERCHANGE_APERAK_11A.xsd and ORDRSP_INVOIC_96A.xsd patterns
+            if [[ $file =~ ^(EDIFACTINTERCHANGE|ORDRSP)_.*_([0-9][0-9][A-Z])\.xsd$ ]]; then
+              prefix="${BASH_REMATCH[1]}"
+              version="${BASH_REMATCH[2]}"
+              
+              # Create directory for this version if it doesn't exist
+              mkdir -p "${prefix}_${version}"
+              # Copy file to appropriate version folder
+              cp "$file" "${prefix}_${version}/"
+              echo "Organized $file -> ${prefix}_${version}/"
+            fi
+          fi
+        done
+        
     - name: Build project
       run: mvn clean package -DskipTests
       
@@ -93,18 +115,37 @@ jobs:
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
         restore-keys: ${{ runner.os }}-m2
         
-    - name: Build libs/edifactconverter module
-      run: |
-        cd libs/edifactconverter
-        mvn clean install -DskipTests
-        
-    - name: Copy XSD files to resources
-      run: |
-        find libs/edifactconverter -name "*.xsd" -type f -exec cp {} cpitoedifact-converter-core/src/main/resources/ \;
         
     - name: Build and package
       run: mvn clean package -DskipTests
-      
+
+    - name: Copy XSD files to resources
+      run: |
+        find libs/edifactconverter -name "*.xsd" -type f -exec cp {} cpitoedifact-converter-core/target/ \;
+        
+    - name: Organize XSD files into version folders
+      run: |
+        cd cpitoedifact-converter-core/target
+        
+        # Dynamically create directories and organize XSD files by version
+        for file in *.xsd; do
+          if [[ -f "$file" ]]; then
+            # Extract version and prefix from filename
+            # Supports both EDIFACTINTERCHANGE_APERAK_11A.xsd and ORDRSP_INVOIC_96A.xsd patterns
+            if [[ $file =~ ^.*_.*_([0-9][0-9][A-Z])\.xsd$ ]]; then
+              prefix="${BASH_REMATCH[1]}"
+              version="${BASH_REMATCH[2]}"
+              
+              # Create directory for this version if it doesn't exist
+              mkdir -p "${prefix}_${version}"
+              # Copy file to appropriate version folder
+              cp "$file" "${prefix}_${version}/"
+              echo "Organized $file -> ${prefix}_${version}/"
+            fi
+          fi
+        done
+
+
     - name: Create release artifacts
       run: |
         mkdir -p release-artifacts
