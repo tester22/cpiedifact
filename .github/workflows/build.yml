@@ -12,7 +12,7 @@ jobs:
     
     strategy:
       matrix:
-        java-version: [8, 11, 17]
+        java-version: [8, 11]
     
     steps:
     - name: Checkout code
@@ -50,14 +50,15 @@ jobs:
           if [[ -f "$file" ]]; then
             # Extract version and prefix from filename
             # Supports both EDIFACTINTERCHANGE_APERAK_11A.xsd and ORDRSP_INVOIC_96A.xsd patterns
-            if [[ $file =~ ^.*_([0-9][0-9][A-Z])\.xsd$ ]]; then
-              version="${BASH_REMATCH[1]}"
+            if [[ $file =~ ^.*_.*_([0-9][0-9][A-Z])\.xsd$ ]]; then
+              prefix="${BASH_REMATCH[1]}"
+              version="${BASH_REMATCH[2]}"
               
               # Create directory for this version if it doesn't exist
-              mkdir -p "EDIFACTINTERCHANGE_${version}"
+              mkdir -p "${prefix}_${version}"
               # Move file to appropriate version folder
-              mv "$file" "EDIFACTINTERCHANGE_${version}/"
-              echo "Organized $file -> EDIFACTINTERCHANGE_${version}/"
+              mv "$file" "${prefix}_${version}/"
+              echo "Organized $file -> ${prefix}_${version}/"
             fi
           fi
         done
@@ -69,7 +70,7 @@ jobs:
     - name: Upload XSD files
       uses: actions/upload-artifact@v4
       with:
-        name: xsd-files.zip
+        name: xsd-files-java-${{ matrix.java-version }}
         path: xsd-files.zip
         retention-days: 30
 
@@ -102,16 +103,20 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     
+    strategy:
+      matrix:
+        java-version: [8, 11]
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
         submodules: recursive
         
-    - name: Set up JDK 8
+    - name: Set up JDK ${{ matrix.java-version }}
       uses: actions/setup-java@v4
       with:
-        java-version: '8'
+        java-version: ${{ matrix.java-version }}
         distribution: 'temurin'
         
     - name: Cache Maven dependencies
@@ -121,18 +126,18 @@ jobs:
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
         restore-keys: ${{ runner.os }}-m2
         
-        
-    - name: Build and package
+    - name: Build project
       run: mvn clean package -DskipTests
 
     - name: Copy XSD files to resources
       run: |
-        find libs/edifactconverter -name "*.xsd" -type f -exec cp {} cpitoedifact-converter-core/target/ \;
+        mkdir -p xsd
+        find libs/edifactconverter -name "*.xsd" -type f -exec cp {} xsd/ \;
         
     - name: Organize XSD files into version folders
       run: |
-        cd cpitoedifact-converter-core/target
-        
+        cd xsd
+
         # Dynamically create directories and organize XSD files by version
         for file in *.xsd; do
           if [[ -f "$file" ]]; then
@@ -144,21 +149,57 @@ jobs:
               
               # Create directory for this version if it doesn't exist
               mkdir -p "${prefix}_${version}"
-              # Copy file to appropriate version folder
-              cp "$file" "${prefix}_${version}/"
+              # Move file to appropriate version folder
+              mv "$file" "${prefix}_${version}/"
               echo "Organized $file -> ${prefix}_${version}/"
             fi
           fi
         done
 
+    - name: Zip XSD files
+      run: |
+        zip -r xsd-files.zip xsd
+
+    - name: Upload XSD files
+      uses: actions/upload-artifact@v4
+      with:
+        name: xsd-files-release-java-${{ matrix.java-version }}
+        path: xsd-files.zip
+        retention-days: 90
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-release-java-${{ matrix.java-version }}
+        path: |
+          **/target/surefire-reports/
+          **/target/test-classes/
+          
+    - name: Upload JAR artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: jar-artifacts-release-java-${{ matrix.java-version }}
+        path: |
+          cpitoedifact-converter-core/target/*.jar
+        retention-days: 90
+        
+    - name: Upload fat JAR
+      uses: actions/upload-artifact@v4
+      with:
+        name: fat-jar-release-java-${{ matrix.java-version }}
+        path: cpitoedifact-converter-core/target/*-fat.jar
+        retention-days: 90
 
     - name: Create release artifacts
       run: |
         mkdir -p release-artifacts
-        cp cpitoedifact-converter-core/target/*.jar release-artifacts/        
+        cp cpitoedifact-converter-core/target/*.jar release-artifacts/
+        cp xsd-files.zip release-artifacts/
+        
     - name: Upload release artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: release-artifacts
+        name: release-artifacts-java-${{ matrix.java-version }}
         path: release-artifacts/
         retention-days: 90
