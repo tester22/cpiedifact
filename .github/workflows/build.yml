@@ -38,12 +38,13 @@ jobs:
         
     - name: Copy XSD files to resources
       run: |
-        find libs/edifactconverter -name "*.xsd" -type f -exec cp {} cpitoedifact-converter-core/src/main/resources/ \;
+        mkdir -p xsd
+        find libs/edifactconverter -name "*.xsd" -type f -exec cp {} xsd/ \;
         
     - name: Organize XSD files into version folders
       run: |
-        cd cpitoedifact-converter-core/src/main/resources
-        
+        cd xsd
+
         # Dynamically create directories and organize XSD files by version
         for file in *.xsd; do
           if [[ -f "$file" ]]; then
@@ -54,13 +55,24 @@ jobs:
               
               # Create directory for this version if it doesn't exist
               mkdir -p "EDIFACTINTERCHANGE_${version}"
-              # Copy file to appropriate version folder
-              cp "$file" "EDIFACTINTERCHANGE_${version}/"
+              # Move file to appropriate version folder
+              mv "$file" "EDIFACTINTERCHANGE_${version}/"
               echo "Organized $file -> EDIFACTINTERCHANGE_${version}/"
             fi
           fi
         done
-      
+
+    - name: Zip XSD files
+      run: |
+        zip -r xsd-files.zip xsd/
+
+    - name: Upload XSD files
+      uses: actions/upload-artifact@v4
+      with:
+        name: xsd-files.zip
+        path: xsd-files.zip
+        retention-days: 30
+
     - name: Upload test results
       uses: actions/upload-artifact@v4
       if: always()
