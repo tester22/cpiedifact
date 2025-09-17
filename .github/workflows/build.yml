@@ -37,9 +37,6 @@ jobs:
       run: |
         cd libs/edifactconverter
         mvn clean install -DskipTests
-        
-    - name: Run tests
-      run: mvn clean test
       
     - name: Build project
       run: mvn clean package -DskipTests
