@@ -21,7 +21,7 @@ jobs:
         distribution: 'temurin'
         
     - name: Cache Maven dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.m2
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
@@ -39,7 +39,7 @@ jobs:
       run: mvn clean package -DskipTests
       
     - name: Upload test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: test-results
@@ -48,21 +48,21 @@ jobs:
           **/target/test-classes/
           
     - name: Upload core JAR
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: cpitoedifact-converter-core
         path: cpitoedifact-converter-core/target/*.jar
         retention-days: 30
         
     - name: Upload fat JAR
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: cpitoedifact-converter-fat
         path: cpitoedifact-converter-core/target/*-fat.jar
         retention-days: 30
         
     - name: Upload edifactconverter JARs
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: edifactconverter-libs
         path: |

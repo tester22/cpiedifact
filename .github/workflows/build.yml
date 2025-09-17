@@ -25,7 +25,7 @@ jobs:
         distribution: 'temurin'
         
     - name: Cache Maven dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.m2
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
@@ -43,7 +43,7 @@ jobs:
       run: mvn clean package -DskipTests
       
     - name: Upload test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: test-results-java-${{ matrix.java-version }}
@@ -52,7 +52,7 @@ jobs:
           **/target/test-classes/
           
     - name: Upload JAR artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: jar-artifacts-java-${{ matrix.java-version }}
         path: |
@@ -62,7 +62,7 @@ jobs:
         retention-days: 30
         
     - name: Upload fat JAR
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: fat-jar-java-${{ matrix.java-version }}
         path: cpitoedifact-converter-core/target/*-fat.jar
@@ -84,7 +84,7 @@ jobs:
         distribution: 'temurin'
         
     - name: Cache Maven dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.m2
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
@@ -106,7 +106,7 @@ jobs:
         cp libs/edifactconverter/openedifact-converter-runnable/target/*.jar release-artifacts/
         
     - name: Upload release artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: release-artifacts
         path: release-artifacts/
