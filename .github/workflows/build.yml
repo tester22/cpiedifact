@@ -37,7 +37,11 @@ jobs:
       run: |
         cd libs/edifactconverter
         mvn clean install -DskipTests
-      
+        
+    - name: Copy XSD files to resources
+      run: |
+        find libs/edifactconverter -name "*.xsd" -type f -exec cp {} cpitoedifact-converter-core/src/main/resources/ \;
+        
     - name: Build project
       run: mvn clean package -DskipTests
       
@@ -56,8 +60,6 @@ jobs:
         name: jar-artifacts-java-${{ matrix.java-version }}
         path: |
           cpitoedifact-converter-core/target/*.jar
-          libs/edifactconverter/openedifact-converter/target/*.jar
-          libs/edifactconverter/openedifact-converter-runnable/target/*.jar
         retention-days: 30
         
     - name: Upload fat JAR
@@ -96,16 +98,17 @@ jobs:
         cd libs/edifactconverter
         mvn clean install -DskipTests
         
+    - name: Copy XSD files to resources
+      run: |
+        find libs/edifactconverter -name "*.xsd" -type f -exec cp {} cpitoedifact-converter-core/src/main/resources/ \;
+        
     - name: Build and package
       run: mvn clean package -DskipTests
       
     - name: Create release artifacts
       run: |
         mkdir -p release-artifacts
-        cp cpitoedifact-converter-core/target/*.jar release-artifacts/
-        cp libs/edifactconverter/openedifact-converter/target/*.jar release-artifacts/
-        cp libs/edifactconverter/openedifact-converter-runnable/target/*.jar release-artifacts/
-        
+        cp cpitoedifact-converter-core/target/*.jar release-artifacts/        
     - name: Upload release artifacts
       uses: actions/upload-artifact@v4
       with:

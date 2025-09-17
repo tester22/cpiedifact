@@ -33,7 +33,11 @@ jobs:
       run: |
         cd libs/edifactconverter
         mvn clean install -DskipTests
-      
+        
+    - name: Copy XSD files to resources
+      run: |
+        find libs/edifactconverter -name "*.xsd" -type f -exec cp {} cpitoedifact-converter-core/src/main/resources/ \;
+        
     - name: Build project
       run: mvn clean package -DskipTests
       
