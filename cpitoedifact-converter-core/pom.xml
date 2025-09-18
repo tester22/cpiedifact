@@ -17,6 +17,13 @@
     <description>Core converter implementation using sapstern/edifactconverter</description>
 
     <dependencies>
+        <!-- XSD Schemas for EDIFACT validation -->
+        <dependency>
+            <groupId>com.cpitoedifact</groupId>
+            <artifactId>xsd</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Sapstern EDIFACT Converter -->
         <dependency>
             <groupId>com.sapstern.openedifact</groupId>
