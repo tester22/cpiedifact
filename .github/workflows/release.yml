@@ -38,12 +38,6 @@ jobs:
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "Extracted version: $VERSION"
         
-    - name: Create Git tag
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git tag -a "v${{ steps.version.outputs.version }}" -m "Release v${{ steps.version.outputs.version }}"
-        git push origin "v${{ steps.version.outputs.version }}"
         
     - name: Create XSD zip file
       run: |
@@ -83,10 +77,23 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         tag_name: v${{ steps.version.outputs.version }}
+        name: Release v${{ steps.version.outputs.version }}
+        body: |
+          ## Release v${{ steps.version.outputs.version }}
+          
+          This release includes:
+          - **XSD JAR**: Contains all XSD schema files
+          - **Fat JAR**: Complete converter with all dependencies
+          - **XSD Zip**: All XSD files in a convenient zip archive
+          
+          ### Artifacts
+          - `xsd-*.jar` - XSD schema JAR file
+          - `cpitoedifact-converter-*-fat.jar` - Fat JAR with all dependencies
+          - `xsd.zip` - All XSD files in zip format
         files: |
           release-artifacts/*.jar
           release-artifacts/*.zip
-        generate_release_notes: true
+        generate_release_notes: false
         draft: false
         prerelease: false
       env:
