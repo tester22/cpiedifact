@@ -28,11 +28,6 @@ jobs:
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
         restore-keys: ${{ runner.os }}-m2
         
-    - name: Build libs/edifactconverter module first
-      run: |
-        cd libs/edifactconverter
-        mvn clean install -DskipTests
-        
     - name: Build project
       run: mvn clean package -DskipTests
         
