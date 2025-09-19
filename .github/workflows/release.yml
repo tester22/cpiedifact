@@ -73,28 +73,23 @@ jobs:
         echo "Release artifacts:"
         ls -la release-artifacts/
         
-    - name: Create Release
-      uses: softprops/action-gh-release@v2
+    - name: Upload XSD JAR
+      uses: actions/upload-artifact@v4
       with:
-        tag_name: v${{ steps.version.outputs.version }}
-        name: Release v${{ steps.version.outputs.version }}
-        body: |
-          ## Release v${{ steps.version.outputs.version }}
-          
-          This release includes:
-          - **XSD JAR**: Contains all XSD schema files
-          - **Fat JAR**: Complete converter with all dependencies
-          - **XSD Zip**: All XSD files in a convenient zip archive
-          
-          ### Artifacts
-          - `xsd-*.jar` - XSD schema JAR file
-          - `cpitoedifact-converter-*-fat.jar` - Fat JAR with all dependencies
-          - `xsd.zip` - All XSD files in zip format
-        files: |
-          release-artifacts/*.jar
-          release-artifacts/*.zip
-        generate_release_notes: false
-        draft: false
-        prerelease: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        name: xsd-${{ steps.version.outputs.version }}.jar
+        path: release-artifacts/xsd-*.jar
+        retention-days: 90
+        
+    - name: Upload Fat JAR
+      uses: actions/upload-artifact@v4
+      with:
+        name: cpitoedifact-converter-${{ steps.version.outputs.version }}-fat.jar
+        path: release-artifacts/*-fat.jar
+        retention-days: 90
+        
+    - name: Upload XSD Zip
+      uses: actions/upload-artifact@v4
+      with:
+        name: xsd-${{ steps.version.outputs.version }}.zip
+        path: release-artifacts/xsd.zip
+        retention-days: 90
